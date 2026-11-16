@@ -4,6 +4,8 @@ import csv, io, json, os, sys
 import requests
 from dotenv import load_dotenv
 
+sys.stdout.reconfigure(encoding="utf-8")
+
 load_dotenv()
 if not os.environ.get("GROQ_API_KEY"):
     raise SystemExit("No GROQ_API_KEY found. Make a file called .env next to tool_call.py with one line: GROQ_API_KEY=your key")
@@ -11,6 +13,7 @@ if not os.environ.get("GROQ_API_KEY"):
 # ---------- THE SHEET (given) ----------
 # Plain code, no model: one lecture of the course sheet, looked up by its number.
 SHEET = "https://docs.google.com/spreadsheets/d/1Kg6T-dJWaYx_JCPiRk3u0nBuAQcsCVRDPj1NFKP4WzM/gviz/tq?tqx=out:csv&headers=0&gid=368290478"
+#SHEET = "https://docs.google.com/spreadsheets/d/1Kg6T-dJWaYx_JCPiRk3u0nBuAQcsCVRDPj1NFKP4WzM/edit?gid=327560929#gid=327560929"
 
 def get_lecture(number):
     for row in csv.reader(io.StringIO(requests.get(SHEET).text)):
@@ -38,18 +41,27 @@ messages = [{"role": "user", "content": question}]
 # Step 2. The card: fill in the two empty strings.
 card = {"type": "function", "function": {
     "name": "get_lecture",
-    "description": "",                                                    # Use it when
+    "description": "Filter the row where the cell under 'Lecture title' column starts with lecture number. Use it when anyone asks anything about 100xEngineers lectures. Return the entire filtered row",                                                    # Use it when
     "parameters": {"type": "object",
                    "properties": {"number": {"type": "integer",
-                                             "description": ""}},         # It needs
+                                             "description": "The lecture number"}},         # It needs
                    "required": ["number"]},
 }}
 
-reply = ask_model(messages)                 # Step 2: send the card too
+reply = ask_model(messages, [card])                 # Step 2: send the card too
 print(json.dumps(reply, indent=2, ensure_ascii=False))
 
 # Step 3. Run the request the model wrote.
+lecture_information = get_lecture(json.loads(reply['tool_calls'][0]['function']['arguments'])['number'])
+print(json.dumps(lecture_information, indent=2, ensure_ascii=False))
 
 # Step 4. Hand the result back to the model and print its answer.
-
+messages.append(reply)
+messages.append({
+    "role": "tool",
+    "tool_call_id": reply["tool_calls"][0]["id"],
+    "content": json.dumps(lecture_information),
+})
+reply2 = ask_model(messages, [card])
+print(json.dumps(reply2, indent=2, ensure_ascii=False))
 # Step 5. Turn steps 3 and 4 into a loop.

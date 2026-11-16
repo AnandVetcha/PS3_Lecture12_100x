@@ -62,6 +62,8 @@ messages.append({
     "tool_call_id": reply["tool_calls"][0]["id"],
     "content": json.dumps(lecture_information),
 })
+print('##### Message#########\n')
+print(json.dumps(messages, indent=2, ensure_ascii=False))
 reply2 = ask_model(messages, [card])
 print(json.dumps(reply2, indent=2, ensure_ascii=False))
 # Step 5. Turn steps 3 and 4 into a loop.

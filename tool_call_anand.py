@@ -28,23 +28,24 @@ def ask_model(message, tool=None):
         body['tools'] = tool
     response = requests.post(url, headers = h, json = body)
     if response.status_code == 200:
-        print(json.dumps(response.json(), indent=2, ensure_ascii=False))
+        #print(json.dumps(response.json(), indent=2, ensure_ascii=False))
+        message.append(response.json()['choices'][0]['message'])
         if 'tool_calls' in response.json()['choices'][0]['message'].keys():
             results = []
             for tool_call in response.json()['choices'][0]['message']['tool_calls']:
-                print("Tool call detected:", json.dumps(tool_call, indent=2, ensure_ascii=False))
+                #print("Tool call detected:", json.dumps(tool_call, indent=2, ensure_ascii=False))
                 function_name = tool_call['function']['name']
                 arguments = tool_call['function']['arguments']
                 arguments = json.loads(arguments)
-                print("Function name:", function_name)
-                print("Arguments:", arguments)
+                #print("Function name:", function_name)
+                #print("Arguments:", arguments)
                 result = available_functions[function_name](**arguments)
-                print("Result:", result)
+                #print("Result:", result)
                 results.append(result)
                 message.append({"role": "tool", 'tool_call_id': tool_call['id'], "content": json.dumps(result)})
-            print('#####################')
-            print(json.dumps(message, indent=2, ensure_ascii=False))
-            return 1
+            #print('#####################')
+            #print(json.dumps(message, indent=2, ensure_ascii=False))
+            return ask_model(message, tool=tool)
         else:
             output = response.json()['choices'][0]['message']['content']
             return output

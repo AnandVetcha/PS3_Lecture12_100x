@@ -101,6 +101,8 @@ available_functions = {
 ########## INteraction with LLM ##################
 query = 'At ACME which projects are we currently working on?'
 query = 'Tabulate block wise leakage power of every project we are working at ACME?'
+query = 'Tabulate high leakage transistor percentage usage of every block in every project at ACME'
+query = 'Tabulate transistor width of every block in every project at ACME'
 query = 'For block_a why did power increase as we move from project Hydrogen to Helium?'
 
 messages = [{"role": "user", "content": query}]
